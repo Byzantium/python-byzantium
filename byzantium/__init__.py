@@ -8,7 +8,7 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
-BYZANTIUM_CONSTANTS = 'opt/byzantium/byzantium_const.conf' #'/opt/byzantium/byzantium_const.conf'
+BYZANTIUM_CONSTANTS = '/opt/byzantium/byzantium_const.conf'
 
 def mknum(value, _type, base=10):
     try:
@@ -83,6 +83,7 @@ class Const:
         '''Load all sections of an ini file as a list of dictionaries'''
         constants_conf = os.path.join(os.getcwd(), BYZANTIUM_CONSTANTS)
         conpar = configparser.SafeConfigParser()
+        if not os.path.exists(constants_conf): raise Exception(constants_conf+' Not found.')
         conpar.read(constants_conf)
         logging.debug(constants_conf)
         logging.debug(os.path.exists(constants_conf))
