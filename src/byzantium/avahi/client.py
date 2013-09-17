@@ -12,6 +12,8 @@ from ..utils import Utils
 from .. import const
 from .service_index import ServiceIndex,Record
 
+DBusGMainLoop(set_as_default=True)
+
 class AvahiClient(pykka.ThreadingActor):
     def __init__(self, master, service_type='_tcp', domain=None):
         '''
@@ -43,6 +45,7 @@ class AvahiClient(pykka.ThreadingActor):
         self.master.tell({'record':srvc,'action':'remove'})
 
     def handle_new(self, *args):
+        self.logger.debug('got new item')
         srvc = Record()
         srvc.from_signal('ItemNew',*args)
         self.logger.trace('Found service \'%s\' type \'%s\' domain \'%s\' ' % (srvc.service_name, srvc.service_type, srvc.service_domain))
@@ -67,6 +70,9 @@ class AvahiClient(pykka.ThreadingActor):
     def handle_avahi_error(self, *args):
         self.logger.error('Error: %s: %s\n\t%s' % (__name__, str(repr(args[0]))))
 
+    def handle_all_for_now(self, *args):
+        self.logger.debug('Got signal `AllForNow`')
+
     def on_receive(self, message):
         self.logger.debug('client: got message: %s' % str(repr(message)))
 
@@ -75,18 +81,20 @@ class AvahiClient(pykka.ThreadingActor):
 
     def on_start(self):
         self.logger.debug('AvahiClient.on_start()')
-        self.loop = DBusGMainLoop()
-        self.bus = dbus.SystemBus(mainloop=self.loop)
+        DBusGMainLoop(set_as_default=True)
+        self.bus = dbus.SystemBus()
         self.server = dbus.Interface( self.bus.get_object(avahi.DBUS_NAME, '/'),
                                 'org.freedesktop.Avahi.Server')
         self.sbrowser = dbus.Interface(self.bus.get_object(avahi.DBUS_NAME,
                                 self.server.ServiceBrowserNew(avahi.IF_UNSPEC,
                                 avahi.PROTO_UNSPEC, self.service_type, self.domain, dbus.UInt32(0))),
                                 avahi.DBUS_INTERFACE_SERVICE_BROWSER)
+        self.logger.debug('got dbus. connecting signal handlers')
         self.sbrowser.connect_to_signal('ItemNew', self.handle_new)
-        #self.sbrowser.connect_to_signal('ItemRemove', self.handle_dead)
-        gobject.MainLoop().run()
-
+        self.sbrowser.connect_to_signal('ItemRemove', self.handle_dead)
+        self.sbrowser.connect_to_signal("AllForNow", self.handle_all_for_now)
+        self.sbrowser.connect_to_signal("Failure", self.handle_avahi_error)
+        self.logger.debug('loaded signal handlers. waiting for signals')
 
 class AvahiWrangler(pykka.ThreadingActor):
     def __init__(self, filters=[], domain=None, search_service_types=[]):
@@ -102,7 +110,7 @@ class AvahiWrangler(pykka.ThreadingActor):
         self.service_index = ServiceIndex()
         self.clients = []
         for sst in self.search_service_types:
-            client = AvahiClient.start(master=self.actor_ref, service_type=sst,domain=self.domain)
+            client = AvahiClient.start(master=self.actor_ref, service_type=sst, domain=self.domain)
             self.clients.append(client)
 
     def on_receive(self, message):
@@ -129,7 +137,7 @@ if __name__ == '__main__':
     from . import filters
 
     domain = None # None for default behavior
-    search_service_types = [u'_tcp'] # , u'_udp']
+    search_service_types = [u'_tcp', u'_udp']
 
     try:
         print('starting wrangler')

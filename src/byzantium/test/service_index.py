@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# vim: set expandtab tabstop=4 shiftwidth=4 :
+
 import unittest
 from byzantium.avahi.service_index import ServiceIndex, Index
 

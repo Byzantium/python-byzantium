@@ -8,6 +8,10 @@ try:
 except ImportError:
     import ConfigParser as configparser
 
+__license__ = 'GPL v3'
+
+__author__ = 'haxwithaxe me@haxwithaxe.net'
+
 BYZANTIUM_CONSTANTS = '/opt/byzantium/byzantium_const.conf'
 
 def mknum(value, _type, base=10):

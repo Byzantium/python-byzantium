@@ -1,9 +1,8 @@
+# -*- coding: utf-8 -*-
+# vim: set expandtab tabstop=4 shiftwidth=4 :
+
 import web
 from ...utils import Utils
-
-__license__ = 'GPL v3'
-
-__author__ = 'haxwithaxe me@haxwithaxe.net'
 
 '''
 Utilities for Project Byzantium to use with Web.py
