@@ -182,11 +182,16 @@ class ServiceIndex:
             if an attrib is set to '*' it will match any record with the
             attribute regardless of it's value
         '''
+        keyword = None
         if attribs and len(attribs) > 0:
+            if KEYWORD in attribs: keyword = attribs[KEYWORD]
             index = {}
             for rid, record in self._index.items():
                 for k, v in attribs.items():
-                    if k in record:
+                    if keyword and str(record[k]).contains(keyword):
+                        index[rid] = record
+                        break # matched keyword in one attrib now move to next record
+                    elif k in record:
                         if v == '*' or v == record[k]:
                             index[rid] = record
                             break # matched one attrib now move to next record

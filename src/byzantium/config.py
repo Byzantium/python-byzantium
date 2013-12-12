@@ -5,23 +5,34 @@ import os
 import logging
 import glob
 from .utils import Utils
-from . import const
+from . import const, convert_to_type
 
 class Config(object):
     ''' Make me read from a file and/or environment'''
-    def __init__(self, config_file=None):
+    def __init__(self, config_file=None, load_global=True):
         '''
-            @param  config_file     srt, path to config file
+            @param  config_file     String, path to config file
                                     either absolute or relative
                                     to the default byzantium config
                                     directory.
         '''
         logging.debug('Config.__init__')
+        self.load_global = load_global
         self.utils = Utils()    # get a Utils object
         self.const = const      # grab const to drag around with you
         self.logger = self.utils.get_logger('Config')
         self._values = {}
         logging.debug('config_file: %s' % str(config_file))
+        self.__get_configs(config_file)
+        if self.load_global:
+            self.load_global_configs()
+
+    def load_global_configs(self):
+        global_includes = const.get("global-config-includes") or []
+        for i in global_includes:
+            self.values[i] = self.__get_configs(i)
+
+    def __get_configs(self, config_file):
         if config_file and os.path.exists(config_file):    # config file is an absolute path
             logging.debug('config_file is an absolute path')
             self.config_file = config_file
@@ -60,15 +71,27 @@ class Config(object):
             del conf
         return confs
 
-    def _get_config(self):
+    def _get_config(self, config_file=None):
         '''load individual config file'''
+        set_global = False
+        if not config_file:
+            config_file = self.config_file
+            set_global = True
         logging.debug('Config._get_config')
-        if os.path.exists(self.config_file):
-            logging.debug('found: %s' % self.config_file)
-            self._values = self.utils.ini2dict(self.config_file, 'main')
+        if os.path.exists(config_file):
+            logging.debug('found: %s' % config_file)
+            section = self.utils.ini2dict(config_file, 'main')
             logging.debug('self._values: %s' % repr(self._values))
+            if 'include' in section:
+                for i in section['include']:
+                    self._values[i] = self.__get_config(i)
+                    del section['include'][i]
+                del section['include']
         else:
             logging.debug('config_file not found: %s' % self.config_file)
+        if set_global:
+            self._values.update(section)
+        return section
 
     def __call__(self):
         return self._values

@@ -26,7 +26,7 @@ def convert_to_type(value, convert=True):
     if not value or len(value) < 2: return value
     if value.startswith('(list)'):
         value = value.replace('(list)','', 1)
-        sep = value.pop(0)
+        sep = list(value).pop(0)
         return [convert_to_type(x) for x in value.split(sep)]
     elif value.startswith('(float)'):
         return mknum(value.replace('(float)','', 1), float)
