@@ -5,7 +5,7 @@ import os
 import sys
 import logging
 import subprocess
-from . import convert_to_type, convert_from_type, mknum
+from . import convert_to_type, convert_from_type, mknum, const
 try:
     import configparser
 except ImportError:
@@ -20,6 +20,7 @@ class Utils:
             self.log_level = logging.ERROR
         self.__set_file_logging(self.logger, '/tmp/byantium.log', self.log_level)#const.get('global-log-file'), self.log_level)
         self.__set_stderr_logging(self.logger, self.log_level)
+        self.const = const
         self.logger.debug('Utils.__init__')
 
     def __call__(self):
@@ -129,3 +130,23 @@ class Utils:
 
     def write_cache(self, data, name):
         return self.json2file(data, self.const.Const().get('cache', name))
+
+    def write_pid(self, program):
+        pid = str(os.getpid())
+        filename = os.path.join(self.const.Const().get('pid-path', make=True), os.basename(program)+'.pid')
+        if os.path.exists(filename):
+            self.str2file(filename, pid, mode='a')
+        else:
+            self.str2file(filename, pid, mode='w')
+
+    def remove_pid(self, program):
+        pid = str(os.getpid)
+        filename = os.path.join(self.const.Const().get("pid-path"), os.basename(program)+'.pid')
+        pids = self.file2str(filename).strip().split('\n') or []
+        for p in pids:
+            if p.strip() == pid:
+                pids.pop(pids.index(p))
+        if pids:
+            self.str2file(filename, '\n'.join(pids))
+        else:
+            os.remove(filename)
