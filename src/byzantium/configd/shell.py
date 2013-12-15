@@ -12,10 +12,7 @@ __authors__ = ['haxwithaxe me@haxwithaxe.net']
 __license__ = 'GPLv3'
 
 # Imports
-import os
-import os.path
 import subprocess
-import sys
 import time
 import byzantium
 
