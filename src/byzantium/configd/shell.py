@@ -27,10 +27,10 @@ def shell(*cmd, **kwargs):
     @param  delay       Int, denoting the time in seconds to delay after running the command.
     @return             Return code or String if `pipe` is True.
     """
-    if 'pipe' in kwargs and kwargs['pipe']:
+    if kwargs.get('pipe'):
         retval = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
     retval = subprocess.Popen(cmd)
-    if 'delay' in kwargs and delay > 0:
+    if kwargs.get('delay', 0) > 0:
         time.sleep(delay)
     return retval
 
