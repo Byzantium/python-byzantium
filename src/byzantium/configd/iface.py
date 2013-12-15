@@ -173,24 +173,21 @@ class IFace:
         @param  real_mode   String, the mode found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_mode == self.mode: return True
-        return False
+        return real_mode == self.mode
 
     def correct_essid(self, real_essid):
         """ Correct ESSID?
         @param  real_mode   String, the ESSID found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_essid == self.essid: return True
-        return False
+        return real_essid == self.essid
 
     def correct_bssid(self, real_bssid):
         """ Correct BSSID?
         @param  real_mode   String, the BSSID found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_bssid == self.bssid: return True
-        return False
+        return real_bssid == self.bssid
 
     def correct_frequency(self, real_freq):
         """ Correct frequency?
@@ -198,8 +195,7 @@ class IFace:
         @return             Boolean, True if they match False if not
         """
         # Correct *frequency* (because iwconfig doesn't report channels)?
-        if real_freq == self.frequency(): return True
-        return False
+        return real_freq == self.frequency()
 
     def random_ip_v4(self, network, netmask):
         """ Generate a pseudorandom IP address
