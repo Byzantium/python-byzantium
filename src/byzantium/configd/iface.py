@@ -47,9 +47,8 @@ class Utils(object):
         @param  spectrum        String, of value "2.4GHz", "3.6GHz", or "5GHz" specifying the IEEE802.11 band `frequency is in`
         @return                 String, of the frequency in GHz or None if not found.
         """
-        channel = int(channel, 10)
-        if channel in freq_chan_dict[spectrum]: return str(freq_chan_dict[spectrum][channel])
-        return None
+        freq = freq_chan_dict[spectrum].get(int(channel))
+        return str(freq) if freq != None else None
 
 class IFace:
     """Network Interface Class
