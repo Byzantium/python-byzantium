@@ -14,10 +14,7 @@ __license__ = 'GPLv3'
 
 # Imports
 import os
-import os.path
 import random
-import re
-import sys
 import byzantium
 
 # Initialize the randomizer.
