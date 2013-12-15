@@ -158,13 +158,13 @@ class IFace:
         mode, essid, bssid, freq = None
         # go line by line and pull out values
         for line in output:
-            if re.search("Mode", line):
+            if "Mode" in line:
                 mode = line.split(' ')[0].split(':')[1]
-            elif re.search("ESSID", line):
+            elif "ESSID" in line:
                 essid = line.split(' ')[-1].split(':')[1]
-            elif re.search("Cell", line):
+            elif "Cell" in line:
                 bssid = line.split(' ')[-1]
-            elif re.search("Frequency", line):
+            elif "Frequency" in line:
                 freq = line.split(' ')[2].split(':')[1]
         return mode, essid, bssid, freq
 
