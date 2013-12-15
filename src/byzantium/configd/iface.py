@@ -206,7 +206,7 @@ class IFace:
         #   For every octet in `network` that is '0' and comes after all non-'0'
         # octets pick a random replacement counting in reverse so we don't hit
         # a '0' that occurs before a non-'0'
-        for octet in range(0, len(network)).reverse():
+        for octet in range(len(network)-1, -1, -1):
             if network[octet] != '0': break
             network[octet] = str(random.randint(0, 254))
         return network
