@@ -87,14 +87,13 @@ class OLSRD(RC):
             logger.info("Failed to stop routing daemon.")
 
     def rc(self, action="restart"):
-        if action.lower() == "start":
-            self._start()
-        elif action.lower() == "stop":
-        elif action.lower() == "restart":
-            self._restart()
-        elif action.lower() == "status":
-            self.status()
-        else:
-            raise Exception(action+" is not a valid option")
+        switch = { 'start':   self._start,
+                   'stop':    self._stop,
+                   'restart': self._restart,
+                   'status':  self._status }
+        try:
+            switch[action.lower()]()
+        except KeyError:
+            raise Exception(action + " is not a valid option")
 
 
