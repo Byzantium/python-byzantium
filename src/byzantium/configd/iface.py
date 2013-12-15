@@ -361,10 +361,7 @@ class NetworkDeviceList:
         # For each network interface's pseudofile in /sys, test to see if a
         # subdirectory 'wireless/' exists.  Use this to sort the list of
         # interfaces into wired and wireless.
-        wireless = []
-        for i in net_devices:
-            if os.path.isdir("/sys/class/net/%s/wireless" % i):
-                wireless.append(i)
+        wireless = [i for i in net_devices if os.path.isdir("/sys/class/net/%s/wireless" % i)]
         # if we don't find any wireless devices pitch a fit
         if not wireless:
             raise byzantium.exception.DeviceException("ERROR: No wireless interfaces found.")
