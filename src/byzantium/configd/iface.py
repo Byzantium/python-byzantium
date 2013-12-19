@@ -14,10 +14,7 @@ __license__ = 'GPLv3'
 
 # Imports
 import os
-import os.path
 import random
-import re
-import sys
 import byzantium
 
 # Initialize the randomizer.
@@ -30,7 +27,7 @@ class Utils(object):
     # map of IEEE802.11 channels to frequencies in GHz
     freq_chan_dict = {
             "2.4GHz":{1: 2.412, 2: 2.417, 3: 2.422, 4: 2.427, 5: 2.432, 6: 2.437, 7: 2.442, 8: 2.447, 9: 2.452, 10: 2.457, 11: 2.462, 12: 2.467, 13: 2.472, 14: 2.484},
-            "3.6GHz":{131: 3.6575, 132: 3.66, 133: 3.665, 134: 3.67, 135: 3.6775, 136: 3.68, 137: 3.685, 138: 3.69}
+            "3.6GHz":{131: 3.6575, 132: 3.66, 133: 3.665, 134: 3.67, 135: 3.6775, 136: 3.68, 137: 3.685, 138: 3.69},
             "5GHz":{128: 5.64, 64: 5.32, 132: 5.66, 7: 5.035, 8: 5.04, 9: 5.045, 11: 5.055, 12: 5.06, 16: 5.08, 149: 5.745, 153: 5.765, 157: 5.785, 161: 5.805, 34: 5.17, 36: 5.18, 165: 5.825, 38: 5.19, 40: 5.2, 42: 5.21, 44: 5.22, 46: 5.23, 48: 5.24, 136: 5.68, 52: 5.26, 183: 4.915, 56: 5.28, 185: 4.925, 187: 4.935, 60: 5.3, 189: 4.945, 192: 4.96, 196: 4.98, 140: 5.7, 184: 4.92, 100: 5.5, 104: 5.52, 188: 4.94, 108: 5.54, 112: 5.56, 116: 5.58, 120: 5.6, 124: 5.62}
             }
 
@@ -40,7 +37,7 @@ class Utils(object):
         @param  spectrum        String, of value "2.4GHz", "3.6GHz", or "5GHz" specifying the IEEE802.11 band `frequency is in`
         @return                 String, of the channel number or None if not found.
         """
-        for chan, freq in freq_chan_dict[spectrum].itmes():
+        for chan, freq in freq_chan_dict[spectrum].items():
             if frequency == str(freq): return str(chan)
         return None
 
@@ -50,9 +47,8 @@ class Utils(object):
         @param  spectrum        String, of value "2.4GHz", "3.6GHz", or "5GHz" specifying the IEEE802.11 band `frequency is in`
         @return                 String, of the frequency in GHz or None if not found.
         """
-        channel = int(channel, 10)
-        if channel in freq_chan_dict[spectrum]: return str(freq_chan_dict[spectrum][channel])
-        return None
+        freq = freq_chan_dict[spectrum].get(int(channel))
+        return str(freq) if freq != None else None
 
 class IFace:
     """Network Interface Class
@@ -162,13 +158,13 @@ class IFace:
         mode, essid, bssid, freq = None
         # go line by line and pull out values
         for line in output:
-            if re.search("Mode", line):
+            if "Mode" in line:
                 mode = line.split(' ')[0].split(':')[1]
-            elif re.search("ESSID", line):
+            elif "ESSID" in line:
                 essid = line.split(' ')[-1].split(':')[1]
-            elif re.search("Cell", line):
+            elif "Cell" in line:
                 bssid = line.split(' ')[-1]
-            elif re.search("Frequency", line):
+            elif "Frequency" in line:
                 freq = line.split(' ')[2].split(':')[1]
         return mode, essid, bssid, freq
 
@@ -177,24 +173,21 @@ class IFace:
         @param  real_mode   String, the mode found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_mode == self.mode: return True
-        return False
+        return real_mode == self.mode
 
     def correct_essid(self, real_essid):
         """ Correct ESSID?
         @param  real_mode   String, the ESSID found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_essid == self.essid: return True
-        return False
+        return real_essid == self.essid
 
     def correct_bssid(self, real_bssid):
         """ Correct BSSID?
         @param  real_mode   String, the BSSID found by iwconfig.
         @return             Boolean, True if they match False if not
         """
-        if real_bssid == self.bssid: return True
-        return False
+        return real_bssid == self.bssid
 
     def correct_frequency(self, real_freq):
         """ Correct frequency?
@@ -202,8 +195,7 @@ class IFace:
         @return             Boolean, True if they match False if not
         """
         # Correct *frequency* (because iwconfig doesn't report channels)?
-        if real_freq == self.frequency(): return True
-        return False
+        return real_freq == self.frequency()
 
     def random_ip_v4(self, network, netmask):
         """ Generate a pseudorandom IP address
@@ -214,7 +206,7 @@ class IFace:
         #   For every octet in `network` that is '0' and comes after all non-'0'
         # octets pick a random replacement counting in reverse so we don't hit
         # a '0' that occurs before a non-'0'
-        for octet in range(0, len(network)).reverse():
+        for octet in range(len(network)-1, -1, -1):
             if network[octet] != '0': break
             network[octet] = str(random.randint(0, 254))
         return network
@@ -369,10 +361,7 @@ class NetworkDeviceList:
         # For each network interface's pseudofile in /sys, test to see if a
         # subdirectory 'wireless/' exists.  Use this to sort the list of
         # interfaces into wired and wireless.
-        wireless = []
-        for i in net_devices:
-            if os.path.isdir("/sys/class/net/%s/wireless" % i):
-                wireless.append(i)
+        wireless = [i for i in net_devices if os.path.isdir("/sys/class/net/%s/wireless" % i)]
         # if we don't find any wireless devices pitch a fit
         if not wireless:
             raise byzantium.exception.DeviceException("ERROR: No wireless interfaces found.")
