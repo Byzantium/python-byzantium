@@ -25,8 +25,8 @@ class RC:
 
     def rc(self, action="restart"):
         """ Poke at dnsmasq. 
-        @param  action      String, parameter to pass to /etc/rc.d/rc.dnsmasq. It must be valid as per that script's requirements.
-        @return             Return value of '/etc/rc.d/rc.dnsmasq'
+        @param  action      String, parameter to pass to the initscript. It must be valid as per that script's requirements.
+        @return             Return value of the initscript
         """
         logger.info("%s dnsmasq." % action.upper())
         self.cmd.append(action.lower())
