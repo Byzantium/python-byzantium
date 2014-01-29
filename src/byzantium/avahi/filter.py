@@ -4,13 +4,15 @@
 from .. import utils
 
 class AvahiFilter:
+    """ Abstract class for filters to pass to avahi.client.AvahiClient """
+
     def __init__(self):
         self.logger = utils.Utils().get_logger()
 
     def match(self, record, action=None):
-        '''
+        """
             Do something with the Record passed with a new service, new info about a service or a removed one.
             return True to have the Record stored in the service index
             return false to let other filters decide
-        '''
+        """
         return False
