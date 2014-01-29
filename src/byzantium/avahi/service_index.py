@@ -14,7 +14,17 @@ logger = Utils().get_logger(name='ServiceIndex', new=True)
 config = Config('service_index.conf')
 
 class ByzTxtItem:
+    """ txt record entry object with byzantium specific format """
+
     def __init__(self, parent, key, lookup, lookup_default=None, value=None, multiline=False):
+        """
+        @param  parent
+        @param  key
+        @param  lookup
+        @param  lookup_default
+        @param  value
+        @param  multiline
+        """
         self.parent = parent
         self.key = key
         self.lookup = lookup
@@ -24,27 +34,37 @@ class ByzTxtItem:
         self._multiline = multiline
 
     def __call__(self):
+        """ Return the entry value when called """
         return self.value
 
     def set(self, value):
-        ''' for the sake of conformity'''
+        """ For the sake of conformity
+        @param  value   The content of the txt record entry
+        """
         self.value = value
 
     def get(self, key=None):
-        ''' for the sake of conformity'''
+        """ For the sake of conformity
+        @param  key     The key of the txt record entry (not used to retrieve the value)
+        @return         The entry value
+        """
         return self.value
 
     def append(self, line):
+        """ Append a line to the entry.
+        If multiline is set to False this is a no-op.
+        @param  line    line of text for the txt record entry
+        """
         if self._multiline:
             self.value = '\n'.join([self.value, value])
     
     def get_format(self):
+        """ Return the FIXME ... wtf format is this """
         return config.get(self.lookup, default=self.lookup_default)
 
 class ByzTxt:
-    '''
-        Class to mangle the txt element of avahi records with certian formatting
-    '''
+    ''' Class to mangle the txt element of avahi records with certian formatting '''
+
     def __init__(self, txt_record=None):
         logger.debug('txt: %s' % txt_record)
         logger.debug('ByzTxt.__init__')
@@ -91,7 +111,23 @@ class ByzTxt:
                 self.ns[collect_until_next].append(line)
 
 class Record:
+    """ Avahi service record """
+
     def __init__(self, **kwargs):
+        """ FIXME specify possible values of kwargs
+        @param fullname
+        @param interface
+        @param protocol
+        @param service_name
+        @param service_type
+        @param service_domain
+        @param hostname
+        @param ip_version
+        @param ipaddr
+        @param port
+        @param txt
+        @param flags
+        """
         logger.debug('Record.__init__')
         self.ns = ['fullname','interface', 'protocol', 'service_name', 'service_type', 'service_domain', 'hostname', 'ip_version', 'ipaddr', 'port', 'txt', 'flags']
         self.fullname = None
@@ -106,13 +142,15 @@ class Record:
         self.port = kwargs.get('port')
         self.txt = kwargs.get('txt')
         self.flags = kwargs.get('flags')
-
         self.set_fullname()
         self.byz_txt = None
         if self.txt:
             self.byz_txt = ByzTxt(self.txt)
 
     def to_dict(self):
+        """ Return this record as a dict
+        @return         dict of values in this record
+        """
         logger.debug('Record.to_dict')
         d = {}
         for key in self.ns:
@@ -128,13 +166,14 @@ class Record:
         return d
 
     def set_fullname(self):
-        ''' set 'fullname' used as a unique id and required by on of the callbacks'''
+        """ Set 'fullname' used as a unique id and required by on of the callbacks """
         logger.debug('Record.set_fullname')
         if self.service_name and self.service_type and self.service_domain:
             self.fullname = '%s.%s%s' % (self.service_name, self.service_type,self.service_domain)
             logger.debug('Record.set_fullname: %s' % self.fullname)
 
     def from_signal(self, signal, args):
+        """ Load the record from an avahi record """
         logger.debug('Record.from_signal')
         argc = len(args)
         if signal in ('ItemNew','ItemRemove', 'Found'):
@@ -161,7 +200,9 @@ class Record:
 
 
 class ServiceIndex:
+    """ Index of services on the network """
     def __init__(self):
+        """ FIXME describe setup of the object """
         logger.debug('ServiceIndex.__init__')
         config_file =  config.get('service-index')
         if not config_file: raise Exception('Missing service-index entry in service-index.conf')
@@ -170,18 +211,14 @@ class ServiceIndex:
         self._index = {}
 
     def dump(self):
-        '''
-            get the whole index
-        '''
+        """ get the whole index """
         logger.debug('ServiceIndex.dump')
         logger.debug(repr(self._index))
         return self._index
 
     def get(self, **attribs):
-        '''
-            if an attrib is set to '*' it will match any record with the
-            attribute regardless of it's value
-        '''
+        """ If an attrib is set to '*' it will match any record with the
+        attribute regardless of it's value """
         keyword = None
         if attribs and len(attribs) > 0:
             if KEYWORD in attribs: keyword = attribs[KEYWORD]
@@ -190,74 +227,63 @@ class ServiceIndex:
                 for k, v in attribs.items():
                     if keyword and str(record[k]).contains(keyword):
                         index[rid] = record
-                        break # matched keyword in one attrib now move to next record
+                        break   # matched keyword in one attrib now move to next record
                     elif k in record:
                         if v == '*' or v == record[k]:
                             index[rid] = record
-                            break # matched one attrib now move to next record
+                            break   # matched one attrib now move to next record
             return index
         else:
             return self._index
 
     def _write(self):
-        '''
-            write to file
-        '''
+        """ Write the index to an ini file """
         logger.debug('ServiceIndex._write')
         self.utils.dict2ini(self._index, self.__file, convert=True)
 
     def _read(self):
-        '''
-            read from file
-        '''
+        """ Load the index from an ini file """
         logger.debug('ServiceIndex._read')
         if self.__file and os.path.exists(self.__file):
             self._index = self.utils.ini2dict(self.__file, convert=True)
 
     def _wipe(self):
-        '''
-            clear saved and live copies.
-        '''
+        """ Clear saved and live copies of the index. """
         logger.debug('ServiceIndex._wipe')
         self._index = {}
         self._write()
 
     def add(self, record):
-        '''
-            add item to the saved copy
-            same as update.
-        '''
+        """ Add an item to the saved copy of the index (same as update). 
+        @param  record      Record object to add to the index.
+        """
         logger.debug('ServiceIndex.add')
         self.update(record)
 
     def update(self, record):
-        '''
-            merge saved and live copies with preference to the live copy
-        '''
+        """ Add an item to the saved copy of the index (same as add). 
+        @param  record      Record object to add to the index.
+        """
         logger.debug('ServiceIndex.update')
         self._read()
         self._index.update({record.fullname:record.to_dict()})
         self._write()
 
     def pull(self):
-        '''
-            dump live copy and read the saved one
-        '''
+        """ Dump live copy of the index and read the saved one. """
         logger.debug('ServiceIndex.pull')
         self._index = {}
         self._read()
 
     def push(self):
-        '''
-            write the live copy overwriting the saved one
-        '''
+        """ Write the live copy of the index to disk, overwriting the saved one. """
         logger.debug('ServiceIndex.push')
         self._write()
 
     def remove(self, key):
-        '''
-            remove item from the save copy
-        '''
+        """ Remove item from the saved copy
+        @param  key     key of the record in the index to remove.
+        """
         logger.debug('ServiceIndex.remove')
         self._read()
         if key in self._index:
