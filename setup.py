@@ -13,17 +13,11 @@ setup(
 	download_url='https://github.com/Byzantium/python-byzantium',
 	package_dir={
 		'':'src',
-		'byzantium':'src/byzantium',
-		'avahi':'src/byzantium/avahi',
-        'view':'src/byzantium/view',
-        'web':'src/byzantium/view/web',
+		'byzantium'
+                :'src/byzantium',
 		},
 	packages=[
 		'byzantium',
-		'byzantium.avahi',
-		'byzantium.avahi.filters_d',
-		'byzantium.view',
-		'byzantium.view.web'
 		],
 	classifiers=[
 		'Development Status :: Beta',
@@ -39,6 +33,6 @@ setup(
 		'Topic :: Software Development :: Services',
 		],
 	license='GPLv3',
-	requires=['dbus','pykka','web', 'gobject', 'avahi']
+	requires=['dbus']
 	)
 
